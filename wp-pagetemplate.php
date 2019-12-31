@@ -17,28 +17,43 @@ if (! defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
-if (! class_exists('WP_PageTemplate')) {
+if (is_admin() AND ! class_exists('WP_PageTemplate')) {
     class WP_PageTemplate {
         private static $templates = [];
         private static $column_id = 'template';
     
         public static function init() {
-            self::$templates[] = 'Temp';
-            add_filter('manage_page_posts_columns', [__NAMESPACE__ . '\WP_PageTemplate','manage_page_posts_columns']);
-            add_action('manage_page_posts_custom_column', [__NAMESPACE__ . '\WP_PageTemplate','manage_page_posts_custom_column'], 10, 2);
+            $current_theme = wp_get_theme();                        
+            foreach( $GLOBALS['_wp_post_type_features'] as $post_type => $features) {
+                if (isset($features['page-attributes'])) {
+                    add_filter("manage_{$post_type}_posts_columns", [__NAMESPACE__ . '\WP_PageTemplate','manage_posts_columns']);
+                    add_action("manage_{$post_type}_posts_custom_column", [__NAMESPACE__ . '\WP_PageTemplate','manage_posts_custom_column'], 10, 2);
+                    $available_templates = $current_theme->get_page_templates( null, $post_type );
+                    $available_templates = ! empty( $available_templates ) ? array_merge(
+                        array(
+                            /** This filter is documented in wp-admin/includes/meta-boxes.php */
+                            '' => apply_filters( 'default_page_template_title', __( 'Default template' ), 'rest-api' ),
+                        ),
+                        $available_templates
+                    ) : $available_templates;
+                    self::$templates[$post_type] = $available_templates;
+                }
+            }
         }
-        public static function manage_page_posts_columns($columns) {
+        public static function manage_posts_columns($columns) {
             $columns[self::$column_id] = __('Template');
             return $columns;
         }
-        public static function manage_page_posts_custom_column($column, $post_id) {
+        public static function manage_posts_custom_column($column, $post_id) {
             global $post;
             if (self::$column_id === $column) {
                 $template_file = get_post_meta($post->ID, '_wp_page_template', true);
-                $template_name = self::$templates[0];
+                $post_type = get_post_type($post_id);
+                $template_name = self::$templates[$post_type][$template_file];
                 echo "$template_name ($template_file)";
             }
         }
     }
+    // add_action( 'after_setup_theme', function() { WP_PageTemplate::init(); });    
     WP_PageTemplate::init();
 }
