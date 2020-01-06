@@ -21,5 +21,5 @@ if ( ! is_admin() ) {
 	return;
 }
 
-require 'class-wp-pagetemplate.php';
+require 'classes/class-wp-pagetemplate.php';
 
