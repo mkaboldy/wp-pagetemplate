@@ -37,19 +37,25 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 		 * Initialize static variables and configure hooks.
 		 */
 		public static function init() {
+
 			$current_theme = wp_get_theme();
+
 			foreach ( $GLOBALS['_wp_post_type_features'] as $post_type => $features ) {
 
 				if ( isset( $features['page-attributes'] ) ) {
+
 					add_filter( "manage_{$post_type}_posts_columns", array( __NAMESPACE__ . '\WP_PageTemplate', 'manage_posts_columns' ) );
 					add_action( "manage_{$post_type}_posts_custom_column", array( __NAMESPACE__ . '\WP_PageTemplate', 'manage_posts_custom_column' ), 10, 2 );
-					$available_templates           = $current_theme->get_page_templates( null, $post_type );
-					$available_templates           = ! empty( $available_templates ) ? array_merge(
+
+					$available_templates = $current_theme->get_page_templates( null, $post_type );
+					$available_templates = ! empty( $available_templates ) ? array_merge(
 						array(
-							'' => apply_filters( 'default_page_template_title', __( 'Default template' ), 'rest-api' ),
+							''        => apply_filters( 'default_page_template_title', __( 'Default template' ), 'rest-api' ),
+							'default' => apply_filters( 'default_page_template_title', __( 'Default template' ), 'rest-api' ),
 						),
 						$available_templates
 					) : $available_templates;
+
 					self::$templates[ $post_type ] = $available_templates;
 				}
 			}
@@ -65,7 +71,7 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 			return $columns;
 		}
 		/**
-		 * Adds content to template column, callback to "manage_{$post_type}_posts_custom_column
+		 * Adds content to template column, callback of hook "manage_{$post_type}_posts_custom_column"
 		 *
 		 * @param string $column column id.
 		 * @param int    $post_id the id of the current post.
@@ -73,10 +79,34 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 		public static function manage_posts_custom_column( $column, $post_id ) {
 			global $post;
 			if ( self::$column_id === $column ) {
+
+				$display_name  = '';
+				$display_class = '';
+				$display_title = '';
+				$display_file  = '';
+
 				$template_file = esc_html( get_post_meta( $post->ID, '_wp_page_template', true ) );
-				$post_type     = get_post_type( $post_id );
-				$template_name = esc_html( self::$templates[ $post_type ][ $template_file ] );
-				echo "$template_name ($template_file)";
+
+				if ( $template_file ) {
+					$display_file = '(' . $template_file . ')';
+				}
+
+				$post_type = get_post_type( $post_id );
+
+				if ( isset( self::$templates[ $post_type ][ $template_file ] ) ) {
+					$display_name = self::$templates[ $post_type ][ $template_file ];
+				} else {
+					$display_title = __( 'Template file doesn\'t exist' );
+					$display_class = 'notice notice-error';
+				}
+
+				printf(
+					'%1$s <span class="%2$s" title="%3$s"> %4$s </span>',
+					esc_html( $display_name ),
+					esc_html( $display_class ),
+					esc_html( $display_title ),
+					esc_html( $display_file )
+				);
 			}
 		}
 	}

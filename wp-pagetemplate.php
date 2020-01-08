@@ -3,7 +3,7 @@
 Plugin Name: WP-PageTemplate
 Plugin URI: https://github.com/mkaboldy/wp-pagetemplate
 Description: Adds a template name column to page admin
-Version: 1.1
+Version: 1.2
 Author: Miklos Kaboldy
 Author URI: https://github.com/mkaboldy
 
@@ -22,4 +22,3 @@ if ( ! is_admin() ) {
 }
 
 require 'classes/class-wp-pagetemplate.php';
-
