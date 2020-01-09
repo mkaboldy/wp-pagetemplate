@@ -35,6 +35,8 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 
 		/**
 		 * Initialize static variables and configure hooks.
+		 *
+		 * @return void
 		 */
 		public static function init() {
 
@@ -46,6 +48,8 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 
 					add_filter( "manage_{$post_type}_posts_columns", array( __NAMESPACE__ . '\WP_PageTemplate', 'manage_posts_columns' ) );
 					add_action( "manage_{$post_type}_posts_custom_column", array( __NAMESPACE__ . '\WP_PageTemplate', 'manage_posts_custom_column' ), 10, 2 );
+					add_filter( "manage_edit-{$post_type}_sortable_columns", array( __NAMESPACE__ . '\WP_PageTemplate', 'manage_sortable_columns' ) );
+					add_action( 'pre_get_posts', array( __NAMESPACE__ . '\WP_PageTemplate', 'pre_get_posts' ) );
 
 					$available_templates = $current_theme->get_page_templates( null, $post_type );
 					$available_templates = ! empty( $available_templates ) ? array_merge(
@@ -60,6 +64,7 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 				}
 			}
 		}
+
 		/**
 		 * Adds template column header, callback to hook 'manage_{$post_type}_posts_columns'
 		 *
@@ -70,6 +75,7 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 			$columns[ self::$column_id ] = __( 'Template' );
 			return $columns;
 		}
+
 		/**
 		 * Adds content to template column, callback of hook "manage_{$post_type}_posts_custom_column"
 		 *
@@ -107,6 +113,33 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 					esc_html( $display_title ),
 					esc_html( $display_file )
 				);
+			}
+		}
+
+		/**
+		 * Adds Template column to sortable columns , callback to hook 'manage_{$post_type}_sortable_columns'
+		 *
+		 * @param array $columns existing admin columns.
+		 * @return array the updated columns.
+		 */
+		public static function manage_sortable_columns( $columns ) {
+			$columns[ self::$column_id ] = self::$column_id;
+			return $columns;
+		}
+
+		/**
+		 * Adds Template column to sortable columns , callback to hook 'pre_get_posts'
+		 *
+		 * @param \WP_Query $query the WP_query object.
+		 * @return void
+		 */
+		public static function pre_get_posts( $query ) {
+
+			$orderby = $query->get( 'orderby' );
+
+			if ( self::$column_id === $orderby ) {
+				$query->set( 'meta_key', '_wp_page_template' );
+				$query->set( 'orderby', 'meta_value' );
 			}
 		}
 	}
