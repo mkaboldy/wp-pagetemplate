@@ -85,7 +85,6 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 		public static function manage_posts_custom_column( $column, $post_id ) {
 			global $post;
 			if ( self::$column_id === $column ) {
-
 				$display_name  = '';
 				$display_class = '';
 				$display_title = '';
@@ -97,7 +96,7 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 					$display_file = '(' . $template_file . ')';
 				}
 
-				$post_type = get_post_type( $post_id );
+				$post_type = $post['post_type'];
 
 				if ( isset( self::$templates[ $post_type ][ $template_file ] ) ) {
 					$display_name = self::$templates[ $post_type ][ $template_file ];
