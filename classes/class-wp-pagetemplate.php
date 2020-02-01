@@ -96,7 +96,7 @@ if ( ! class_exists( 'WP_PageTemplate' ) ) {
 					$display_file = '(' . $template_file . ')';
 				}
 
-				$post_type = $post['post_type'];
+				$post_type = $post->post_type;
 
 				if ( isset( self::$templates[ $post_type ][ $template_file ] ) ) {
 					$display_name = self::$templates[ $post_type ][ $template_file ];
